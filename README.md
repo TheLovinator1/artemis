@@ -38,7 +38,7 @@ http://localhost:3000
 # Go to Settings > Environments:
 # - Add a new environment or edit the default one
 # - Set connection type to Direct
-# - Set the host to socket:proxy:2375
+# - Set the host to socket_proxy:2375
 # - Save the environment
 
 ```
