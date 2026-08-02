@@ -1,0 +1,38 @@
+---
+services:
+  qbittorrent:
+    image: ghcr.io/qbittorrent/docker-qbittorrent-nox:latest
+    container_name: qbittorrent
+    read_only: true
+    restart: unless-stopped
+    stop_grace_period: 30m
+    user: 1000:1000
+    tty: true
+    environment:
+      - TZ=Europe/Stockholm
+      - QBT_LEGAL_NOTICE=confirm
+      - QBT_VERSION=latest
+      - QBT_WEBUI_PORT=8080
+      - QBT_TORRENTING_PORT=22799
+      - UMASK=022 # 022: allow all users to read/write files
+    expose:
+      # For web interface
+      - "8080"
+    ports:
+      # For bittorrent traffic
+      - 22799:22799/tcp
+      - 22799:22799/udp
+    tmpfs:
+      - /tmp
+    volumes:
+      - /mnt/Docker/Data/qBittorrent:/config
+      - /mnt/fourteen/Data/Torrents:/downloads
+
+
+networks:
+  qbittorrent:
+    internal: true
+    name: qbittorrent
+
+  default:
+    driver: bridge
