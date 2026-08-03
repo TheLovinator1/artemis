@@ -39,6 +39,7 @@ services:
     volumes:
       - /mnt/Docker/Data/Dockhand:/mnt/Docker/Data/Dockhand
     environment:
+      - HOST_DATA_DIR=/mnt/Docker/Data/Dockhand
       - DATA_DIR=/mnt/Docker/Data/Dockhand
       - ENCRYPTION_KEY=${DOCKHAND_ENCRYPTION_KEY?Add encryption key to .env file}
       - EXPORT_METRICS=true
