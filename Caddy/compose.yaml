@@ -2,7 +2,7 @@ services:
   caddy:
     build:
       context: .
-    restart: unless-stopped
+    restart: on-failure:1
     cap_add:
       - NET_ADMIN
     networks:
