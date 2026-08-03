@@ -31,7 +31,6 @@ services:
     image: fnsys/dockhand:latest
     container_name: dockhand
     restart: unless-stopped
-    user: "1000:1000"
     depends_on:
       - socket_proxy
     ports:
@@ -39,6 +38,8 @@ services:
     volumes:
       - /mnt/Docker/Data/Dockhand:/mnt/Docker/Data/Dockhand
     environment:
+      - PUID=1000
+      - PGID=1000
       - HOST_DATA_DIR=/mnt/Docker/Data/Dockhand
       - DATA_DIR=/mnt/Docker/Data/Dockhand
       - ENCRYPTION_KEY=${DOCKHAND_ENCRYPTION_KEY?Add encryption key to .env file}
