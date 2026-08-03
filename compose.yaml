@@ -37,9 +37,9 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - /opt/dockhand:/opt/dockhand
+      - /mnt/Docker/Data/Dockhand:/mnt/Docker/Data/Dockhand
     environment:
-      - DATA_DIR=/opt/dockhand
+      - DATA_DIR=/mnt/Docker/Data/Dockhand
       - ENCRYPTION_KEY=${DOCKHAND_ENCRYPTION_KEY?Add encryption key to .env file}
       - EXPORT_METRICS=true
     networks:
