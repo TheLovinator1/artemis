@@ -7,7 +7,7 @@ services:
       - 3552:3552
     volumes:
       - /mnt/Docker/Data/Arcane/data:/app/data
-      - /mnt/Docker/Data/artemis:/app/data/projects
+      - /mnt/Docker/Data/artemis:/mnt/Docker/Data/artemis
     environment:
       - APP_URL=http://apollo:3552
       - PUID=1000
@@ -19,7 +19,14 @@ services:
       - POSTGRES_DB=arcane
       - POSTGRES_USER=arcane
       - OIDC_ENABLED=false
-      - PROJECTS_DIRECTORY=/app/data/projects
+      - DISK_USAGE_PATH=/mnt/Docker/Data
+      - AUTO_UPDATE=true
+      - AUTO_UPDATE_INTERVAL=0 */6 * * *
+      - AUTO_HEAL_ENABLED=true
+      - AUTO_HEAL_INTERVAL=*/5 * * * *
+      - DOCKER_API_TIMEOUT=60
+      - DOCKER_IMAGE_PULL_TIMEOUT=1200
+      - PROJECTS_DIRECTORY=/mnt/Docker/Data/artemis
       - DOCKER_HOST=tcp://docker_socket_proxy:2375
       - DATABASE_URL=postgresql://arcane:${ARCANE_DATABASE_PASSWORD?Add Arcane database password to .env file}@arcane_postgres:5432/arcane
     depends_on:
