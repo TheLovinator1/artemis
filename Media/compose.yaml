@@ -1,0 +1,16 @@
+---
+services:
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:develop
+    container_name: sonarr
+    read_only: true
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/Stockholm
+    volumes:
+      - /mnt/Docker/Data/Media/Sonarr:/config
+      - /mnt/fourteen/Data/Torrents:/mnt/fourteen/Data/Torrents
+    ports:
+      - 8989:8989
+    tmpfs:
+      - /run:exec
