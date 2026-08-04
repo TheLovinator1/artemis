@@ -1,7 +1,7 @@
 services:
   cloudflare_ddns:
     image: favonia/cloudflare-ddns:1
-    name: cloudflare_ddns
+    container_name: cloudflare_ddns
     network_mode: host
     restart: always
     user: "1000:1000"
