@@ -1,0 +1,83 @@
+services:
+  arcane:
+    image: ghcr.io/getarcaneapp/manager:latest
+    container_name: arcane
+    restart: unless-stopped
+    ports:
+      - 3552:3552
+    volumes:
+      - /mnt/Docker/Data/Arcane/data:/app/data
+      - /mnt/Docker/Data/artemis:/app/data/projects
+    environment:
+      - APP_URL=http://apollo:3552
+      - PUID=1000
+      - PGID=1000
+      - LOG_LEVEL=info
+      - LOG_JSON=true
+      - ENCRYPTION_KEY=${ARCANE_ENCRYPTION_KEY?Add Arcane encryption key to .env file}
+      - JWT_SECRET=${ARCANE_JWT_SECRET?Add Arcane JWT secret to .env file}
+      - POSTGRES_DB=arcane
+      - POSTGRES_USER=arcane
+      - OIDC_ENABLED=false
+      - PROJECTS_DIRECTORY=/app/data/projects
+      - DOCKER_HOST=tcp://docker_socket_proxy:2375
+      - DATABASE_URL=postgresql://arcane:${ARCANE_DATABASE_PASSWORD?Add Arcane database password to .env file}@arcane_postgres:5432/arcane
+    depends_on:
+      - docker_socket_proxy
+      - arcane_postgres
+    networks:
+      - arcane_internal
+
+  docker_socket_proxy:
+    image: tecnativa/docker-socket-proxy:latest
+    container_name: arcane_docker_proxy
+    privileged: true
+    environment:
+      - EVENTS=1
+      - PING=1
+      - VERSION=1
+      - AUTH=0
+      - SECRETS=0
+      - POST=1
+      - BUILD=0
+      - COMMIT=0
+      - CONFIGS=0
+      - CONTAINERS=1
+      - DISTRIBUTION=0
+      - EXEC=1
+      - IMAGES=1
+      - INFO=1
+      - NETWORKS=1
+      - NODES=0
+      - PLUGINS=0
+      - SERVICES=0
+      - SESSION=0
+      - SWARM=0
+      - SYSTEM=0
+      - TASKS=0
+      - VOLUMES=1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - arcane_internal
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+
+  arcane_postgres:
+    image: postgres:17-alpine
+    container_name: arcane_postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=arcane
+      - POSTGRES_USER=arcane
+      - POSTGRES_PASSWORD=${ARCANE_DATABASE_PASSWORD?Add Arcane database password to .env file}
+    volumes:
+      - /mnt/Docker/Data/Arcane/postgres:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+
+networks:
+  arcane_internal:
+    driver: bridge
+    name: arcane_internal
