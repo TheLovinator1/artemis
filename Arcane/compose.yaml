@@ -75,14 +75,14 @@ services:
     image: postgres:17-alpine
     container_name: arcane_postgres
     restart: unless-stopped
+    networks:
+      - arcane_internal
     environment:
       - POSTGRES_DB=arcane
       - POSTGRES_USER=arcane
       - POSTGRES_PASSWORD=${ARCANE_DATABASE_PASSWORD?Add Arcane database password to .env file}
     volumes:
       - /mnt/Docker/Data/Arcane/postgres:/var/lib/postgresql/data
-    ports:
-      - 5432:5432
 
 networks:
   arcane_internal:
