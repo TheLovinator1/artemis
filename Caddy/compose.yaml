@@ -1,5 +1,6 @@
 services:
   caddy:
+    name: caddy
     build:
       context: .
     restart: on-failure:1
