@@ -1,45 +1,9 @@
 ---
-x-postgres-command: &postgres-command >
-  postgres
-  -c max_connections=200
-  -c shared_buffers=256MB
-  -c effective_cache_size=768MB
-  -c maintenance_work_mem=64MB
-  -c checkpoint_completion_target=0.9
-  -c wal_buffers=7864kB
-  -c default_statistics_target=100
-  -c random_page_cost=1.1
-  -c effective_io_concurrency=1000
-  -c work_mem=4MB
-  -c huge_pages=off
-  -c jit=off
-  -c wal_compression=lz4
-  -c io_method=io_uring
-  -c min_wal_size=1GB
-  -c max_wal_size=4GB
-  -c max_worker_processes=12
-  -c max_parallel_workers_per_gather=4
-  -c max_parallel_workers=12
-  -c max_parallel_maintenance_workers=4
-
-
 networks:
   media:
     driver: bridge
 
-  sonarr_postgres:
-    driver: bridge
-    internal: true
-
-  sonarr_anime_postgres:
-    driver: bridge
-    internal: true
-
-  radarr_postgres:
-    driver: bridge
-    internal: true
-
-  radarr_anime_postgres:
+  media_postgres:
     driver: bridge
     internal: true
 
@@ -56,25 +20,27 @@ services:
     stop_grace_period: 1m
     networks:
       - media
-      - sonarr_postgres
+      - media_postgres
     environment:
       - TZ=Europe/Stockholm
       - SONARR__APP__INSTANCENAME=Sonarr
       - SONARR__AUTH__APIKEY=${SONARR_API_KEY?Add Sonarr API key to .env file}
-      - SONARR__SERVER__PORT=8989
-      - SONARR__POSTGRES__HOST=sonarr_postgres
+      - SONARR__POSTGRES__HOST=media_postgres
+      - SONARR__POSTGRES__LOGDB=sonarr_default_log
+      - SONARR__POSTGRES__MAINDB=sonarr_default_main
+      - SONARR__POSTGRES__PASSWORD=${POSTGRES_SONARR_PASSWORD}
       - SONARR__POSTGRES__PORT=5432
-      - SONARR__POSTGRES__MAINDB=sonarr_main
-      - SONARR__POSTGRES__LOGDB=sonarr_log
+      - SONARR__POSTGRES__USER=sonarr
+      - SONARR__SERVER__PORT=8989
     volumes:
-      - /mnt/Docker/Data/Media/Sonarr:/config
+      - /mnt/Docker/Data/Media/Sonarr/Default:/config
       - /mnt/fourteen/Data/Torrents:/mnt/fourteen/Data/Torrents
     ports:
       - 8989:8989
     tmpfs:
       - /run:exec
     depends_on:
-      sonarr_postgres:
+      media_postgres:
         condition: service_healthy
       prowlarr:
         condition: service_started
@@ -85,36 +51,6 @@ services:
       retries: 3
       start_period: 30s
 
-  sonarr_postgres:
-    image: postgres:18
-    container_name: sonarr_postgres
-    command: *postgres-command
-    restart: unless-stopped
-    shm_size: 256m
-    user: 1000:1000
-    read_only: true
-    stop_grace_period: 1m
-    tmpfs:
-      - /tmp
-      - /run/postgresql
-    cap_drop:
-      - ALL
-    security_opt:
-      - no-new-privileges:true
-    networks:
-      - sonarr_postgres
-    environment:
-      - POSTGRES_DB=sonarr
-      - POSTGRES_USER=sonarr
-      - POSTGRES_PASSWORD=${SONARR_POSTGRES_PASSWORD?Add Sonarr Postgres password to .env file}
-    volumes:
-      - /mnt/Docker/Data/Postgres/Sonarr:/var/lib/postgresql
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U sonarr -d sonarr"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   sonarr_anime:
     image: lscr.io/linuxserver/sonarr:develop
     container_name: sonarr_anime
@@ -122,59 +58,31 @@ services:
     restart: unless-stopped
     networks:
       - media
-      - sonarr_anime_postgres
+      - media_postgres
     environment:
       - TZ=Europe/Stockholm
       - SONARR__APP__INSTANCENAME=Sonarr Anime
       - SONARR__AUTH__APIKEY=${SONARR_API_KEY?Add Sonarr API key to .env file}
-      - SONARR__SERVER__PORT=8989
-      - SONARR__POSTGRES__HOST=sonarr_postgres
+      - SONARR__POSTGRES__HOST=media_postgres
+      - SONARR__POSTGRES__LOGDB=sonarr_anime_log
+      - SONARR__POSTGRES__MAINDB=sonarr_anime_main
+      - SONARR__POSTGRES__PASSWORD=${POSTGRES_SONARR_PASSWORD}
       - SONARR__POSTGRES__PORT=5432
-      - SONARR__POSTGRES__MAINDB=sonarr_main
-      - SONARR__POSTGRES__LOGDB=sonarr_log
+      - SONARR__POSTGRES__USER=sonarr
+      - SONARR__SERVER__PORT=8989
     volumes:
-      - /mnt/Docker/Data/Media/Sonarr_Anime:/config
+      - /mnt/Docker/Data/Media/Sonarr/Anime:/config
       - /mnt/fourteen/Data/Torrents:/mnt/fourteen/Data/Torrents
     ports:
       - 8990:8990
     tmpfs:
       - /run:exec
     depends_on:
-      sonarr_postgres:
+      media_postgres:
         condition: service_healthy
       prowlarr:
         condition: service_started
 
-
-  sonarr_anime_postgres:
-    image: postgres:18
-    container_name: sonarr_anime_postgres
-    command: *postgres-command
-    restart: unless-stopped
-    shm_size: 256m
-    user: 1000:1000
-    read_only: true
-    stop_grace_period: 1m
-    tmpfs:
-      - /tmp
-      - /run/postgresql
-    cap_drop:
-      - ALL
-    security_opt:
-      - no-new-privileges:true
-    networks:
-      - sonarr_anime_postgres
-    environment:
-      - POSTGRES_DB=sonarr
-      - POSTGRES_USER=sonarr
-      - POSTGRES_PASSWORD=${SONARR_POSTGRES_PASSWORD?Add Sonarr Postgres password to .env file}
-    volumes:
-      - /mnt/Docker/Data/Postgres/Sonarr:/var/lib/postgresql
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U sonarr -d sonarr"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   # MARK: Radarr
   radarr:
@@ -184,60 +92,31 @@ services:
     restart: unless-stopped
     networks:
       - media
-      - radarr_postgres
+      - media_postgres
     environment:
       - TZ=Europe/Stockholm
       - RADARR__APP__INSTANCENAME=Radarr
       - RADARR__AUTH__APIKEY=${RADARR_API_KEY?Add Radarr API key to .env file}
-      - RADARR__SERVER__PORT=7878
-      - RADARR__POSTGRES__HOST=radarr_postgres
-      - RADARR__POSTGRES__USER=radarr
-      - RADARR__POSTGRES__PASSWORD=${RADARR_POSTGRES_PASSWORD?Add Radarr Postgres password to .env file}
+      - RADARR__POSTGRES__HOST=media_postgres
+      - RADARR__POSTGRES__LOGDB=radarr_default_log
+      - RADARR__POSTGRES__MAINDB=radarr_default_main
+      - RADARR__POSTGRES__PASSWORD=${POSTGRES_RADARR_PASSWORD?Add Radarr Postgres password to .env file}
       - RADARR__POSTGRES__PORT=5432
-      - RADARR__POSTGRES__MAINDB=radarr_main
-      - RADARR__POSTGRES__LOGDB=radarr_log
+      - RADARR__POSTGRES__USER=radarr
+      - RADARR__SERVER__PORT=7878
     volumes:
-      - /mnt/Docker/Data/Media/Radarr:/config
+      - /mnt/Docker/Data/Media/Radarr/Default:/config
       - /mnt/fourteen/Data/Torrents:/mnt/fourteen/Data/Torrents
     ports:
       - 7878:7878
     tmpfs:
       - /run:exec
     depends_on:
-      radarr_postgres:
+      media_postgres:
         condition: service_healthy
       prowlarr:
         condition: service_started
 
-  radarr_postgres:
-    image: postgres:18
-    container_name: radarr_postgres
-    command: *postgres-command
-    restart: unless-stopped
-    shm_size: 256m
-    user: 1000:1000
-    read_only: true
-    stop_grace_period: 1m
-    tmpfs:
-      - /tmp
-      - /run/postgresql
-    cap_drop:
-      - ALL
-    security_opt:
-      - no-new-privileges:true
-    networks:
-      - radarr_postgres
-    environment:
-      - POSTGRES_DB=radarr
-      - POSTGRES_USER=radarr
-      - POSTGRES_PASSWORD=${RADARR_POSTGRES_PASSWORD?Add Radarr Postgres password to .env file}
-    volumes:
-      - /mnt/Docker/Data/Postgres/Radarr:/var/lib/postgresql
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U radarr -d radarr"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   radarr_anime:
     image: lscr.io/linuxserver/radarr:develop
@@ -246,60 +125,31 @@ services:
     restart: unless-stopped
     networks:
       - media
-      - radarr_anime_postgres
+      - media_postgres
     environment:
       - TZ=Europe/Stockholm
       - RADARR__APP__INSTANCENAME=Radarr Anime
       - RADARR__AUTH__APIKEY=${RADARR_API_KEY?Add Radarr API key to .env file}
-      - RADARR__SERVER__PORT=7878
-      - RADARR__POSTGRES__HOST=radarr_postgres
-      - RADARR__POSTGRES__USER=radarr
-      - RADARR__POSTGRES__PASSWORD=${RADARR_POSTGRES_PASSWORD?Add Radarr Postgres password to .env file}
+      - RADARR__POSTGRES__HOST=media_postgres
+      - RADARR__POSTGRES__LOGDB=radarr_anime_log
+      - RADARR__POSTGRES__MAINDB=radarr_anime_main
+      - RADARR__POSTGRES__PASSWORD=${POSTGRES_RADARR_PASSWORD?Add Radarr Postgres password to .env file}
       - RADARR__POSTGRES__PORT=5432
-      - RADARR__POSTGRES__MAINDB=radarr_main
-      - RADARR__POSTGRES__LOGDB=radarr_log
+      - RADARR__POSTGRES__USER=radarr
+      - RADARR__SERVER__PORT=7879
     volumes:
-      - /mnt/Docker/Data/Media/Radarr_Anime:/config
+      - /mnt/Docker/Data/Media/Radarr/Anime:/config
       - /mnt/fourteen/Data/Torrents:/mnt/fourteen/Data/Torrents
     ports:
-      - 7879:7878
+      - 7879:7879
     tmpfs:
       - /run:exec
     depends_on:
-      radarr_anime_postgres:
+      media_postgres:
         condition: service_healthy
       prowlarr:
         condition: service_started
 
-  radarr_anime_postgres:
-    image: postgres:18
-    container_name: radarr_anime_postgres
-    command: *postgres-command
-    restart: unless-stopped
-    shm_size: 256m
-    user: 1000:1000
-    read_only: true
-    stop_grace_period: 1m
-    tmpfs:
-      - /tmp
-      - /run/postgresql
-    cap_drop:
-      - ALL
-    security_opt:
-      - no-new-privileges:true
-    networks:
-      - radarr_anime_postgres
-    environment:
-      - POSTGRES_DB=radarr
-      - POSTGRES_USER=radarr
-      - POSTGRES_PASSWORD=${RADARR_POSTGRES_PASSWORD?Add Radarr Postgres password to .env file}
-    volumes:
-      - /mnt/Docker/Data/Postgres/Radarr:/var/lib/postgresql
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U radarr -d radarr"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   # MARK: Recyclarr
   recyclarr:
@@ -335,3 +185,65 @@ services:
     ports:
       - 9696:9696
     restart: unless-stopped
+
+  # MARK: Postgres
+  media_postgres:
+    image: postgres:18
+    container_name: media_postgres
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
+    restart: unless-stopped
+    shm_size: 256m
+    user: 1000:1000
+    read_only: true
+    stop_grace_period: 1m
+    tmpfs:
+      - /tmp
+      - /run/postgresql
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - media_postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_SUPER_PASSWORD?Add Postgres Super User password to .env file}
+      - POSTGRES_SONARR_PASSWORD=${POSTGRES_SONARR_PASSWORD}
+      - POSTGRES_RADARR_PASSWORD=${POSTGRES_RADARR_PASSWORD}
+      - POSTGRES_BACKUP_PASSWORD=${POSTGRES_BACKUP_PASSWORD}
+    volumes:
+      - /mnt/Docker/Data/Media/Postgres:/var/lib/postgresql
+      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro
+      - ./postgresql.conf:/etc/postgresql/postgresql.conf:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready --username sonarr --dbname sonarr_default_main"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MARK: Backups
+  databasus:
+    image: databasus/databasus:latest
+    container_name: databasus
+    # TODO(TheLovinator): Use reverse proxy
+    ports:
+      - "4005:4005"
+    volumes:
+      - /mnt/Docker/Data/Media/Databasus:/databasus-data
+      - /mnt/fourteen/Data/Backup/Media/Databasus:/mnt/fourteen/Data/Backup/Media/Databasus
+    restart: unless-stopped
+    environment:
+      - IS_DISABLE_ANONYMOUS_TELEMETRY=true
+    networks:
+      - media
+      - media_postgres
+    healthcheck:
+      test: ["CMD", "databasus", "healthcheck"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    depends_on:
+      media_postgres:
+        condition: service_healthy
