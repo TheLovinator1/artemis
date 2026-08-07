@@ -199,8 +199,8 @@ services:
     tmpfs:
       - /tmp
       - /run/postgresql
-    cap_drop:
-      - ALL
+    #cap_drop:
+    #  - ALL
     security_opt:
       - no-new-privileges:true
     networks:
