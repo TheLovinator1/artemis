@@ -69,7 +69,7 @@ services:
       - SONARR__POSTGRES__PASSWORD=${POSTGRES_SONARR_PASSWORD}
       - SONARR__POSTGRES__PORT=5432
       - SONARR__POSTGRES__USER=sonarr
-      - SONARR__SERVER__PORT=8989
+      - SONARR__SERVER__PORT=8990
     volumes:
       - /mnt/Docker/Data/Media/Sonarr/Anime:/config
       - /mnt/fourteen/Data/Torrents:/mnt/fourteen/Data/Torrents
