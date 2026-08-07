@@ -193,11 +193,7 @@ services:
     command: postgres -c config_file=/etc/postgresql/postgresql.conf
     restart: unless-stopped
     shm_size: 256m
-    read_only: true
     stop_grace_period: 1m
-    tmpfs:
-      - /tmp
-      - /run/postgresql
     security_opt:
       - no-new-privileges:true
     networks:
@@ -244,3 +240,5 @@ services:
     depends_on:
       media_postgres:
         condition: service_healthy
+volumes:
+  media_postgres_data:
