@@ -193,7 +193,7 @@ services:
     command: postgres -c config_file=/etc/postgresql/postgresql.conf
     restart: unless-stopped
     shm_size: 256m
-    user: 1000:1000
+    # user: 1000:1000
     read_only: true
     stop_grace_period: 1m
     tmpfs:
@@ -201,8 +201,8 @@ services:
       - /run/postgresql
     #cap_drop:
     #  - ALL
-    security_opt:
-      - no-new-privileges:true
+    # security_opt:
+    #   - no-new-privileges:true
     networks:
       - media_postgres
     environment:
