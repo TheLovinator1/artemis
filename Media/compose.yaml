@@ -203,7 +203,6 @@ services:
       - ALL
     security_opt:
       - no-new-privileges:true
-      - seccomp=unconfined
     networks:
       - media_postgres
     environment:
