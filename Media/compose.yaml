@@ -251,30 +251,31 @@ services:
       timeout: 10s
       retries: 3
 
-  # MARK: Databasus - DB backups 
-  databasus:
-    image: databasus/databasus:latest
-    container_name: databasus
-    # TODO(TheLovinator): Use reverse proxy
-    ports:
-      - "4005:4005"
+  media_db_backup:
+    container_name: media_db_backup
+    image: docker.io/nfrastack/db-backup
     volumes:
-      - /mnt/Docker/Data/Media/Databasus:/databasus-data
-      - /mnt/fourteen/Data/Backup/Media/Databasus:/mnt/fourteen/Data/Backup/Media/Databasus
-    restart: unless-stopped
+      - /mnt/Fourteen/Data/Backup/Media/Database:/backup
     environment:
-      - IS_DISABLE_ANONYMOUS_TELEMETRY=true
+      - TIMEZONE=Europe/Stockholm
+
+      - BACKUP_JOB_CONCURRENCY=1       # Only run one job at a time
+      - DEFAULT_COMPRESSION=ZSTD       # Compress all with ZSTD
+      - DEFAULT_BACKUP_INTERVAL=1440   # Backup every 1440 minutes
+      - DEFAULT_BACKUP_BEGIN=0000      # Start backing up at midnight
+      - DEFAULT_CLEANUP_TIME=8640      # Cleanup backups after a week
+
+      - DB01_TYPE=postgres
+      - DB01_HOST=media_postgres
+      - DB01_NAME=media
+      - DB01_USER=backup
+      - DB01_PASS=${POSTGRES_BACKUP_PASSWORD}
+
+    restart: always
     networks:
-      - media
-      - media_postgres
-    healthcheck:
-      test: ["CMD", "databasus", "healthcheck"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 60s
+      - media_db_network
     depends_on:
       media_postgres:
         condition: service_healthy
-volumes:
-  media_postgres_data:
+      
+
