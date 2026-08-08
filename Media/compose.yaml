@@ -273,7 +273,7 @@ services:
 
     restart: always
     networks:
-      - media_db_network
+      - media_postgres
     depends_on:
       media_postgres:
         condition: service_healthy
