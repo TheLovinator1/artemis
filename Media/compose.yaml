@@ -259,15 +259,13 @@ services:
     environment:
       - TIMEZONE=Europe/Stockholm
 
-      - BACKUP_JOB_CONCURRENCY=1       # Only run one job at a time
-      - DEFAULT_COMPRESSION=ZSTD       # Compress all with ZSTD
-      - DEFAULT_BACKUP_INTERVAL=1440   # Backup every 1440 minutes
-      - DEFAULT_BACKUP_BEGIN=0000      # Start backing up at midnight
-      - DEFAULT_CLEANUP_TIME=8640      # Cleanup backups after a week
+      - USER_DBBACKUP=1000
+      - GROUP_DBBACKUP=1000
 
       - DB01_TYPE=postgres
       - DB01_HOST=media_postgres
-      - DB01_NAME=media
+      - DB01_NAME=ALL
+      - DB01_SPLIT_DB=TRUE
       - DB01_USER=backup
       - DB01_PASS=${POSTGRES_BACKUP_PASSWORD}
 
