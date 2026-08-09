@@ -1,0 +1,54 @@
+services:
+  forgejo:
+    image: codeberg.org/forgejo/forgejo@sha256:398cb21da60c25cde560836559bad3a64b07894be7385ed66a9d5917355a9862
+    container_name: forgejo
+    restart: always
+    environment:
+      - TZ=Europe/Stockholm
+      - FORGEJO__database__DB_TYPE=postgres
+      - FORGEJO__database__HOST=forgejo_database:5432
+      - FORGEJO__database__NAME=forgejo
+      - FORGEJO__database__USER=forgejo
+      - FORGEJO__database__PASSWD=${FORGEJO_DATABASE_PASSWORD}
+    volumes:
+      - /mnt/Docker/Data/Forgejo/data:/data
+    ports:
+      - 3205:3000
+    depends_on:
+      - forgejo_database
+
+  forgejo_database:
+    image: postgres:17.5@sha256:864831322bf2520e7d03d899b01b542de6de9ece6fe29c89f19dc5e1d5568ccf
+    container_name: forgejo_database
+    restart: always
+    environment:
+      - POSTGRES_DB=forgejo
+      - POSTGRES_USER=forgejo
+      - POSTGRES_PASSWORD=${FORGEJO_DATABASE_PASSWORD}
+    volumes:
+      - /mnt/Docker/Data/Forgejo/database:/var/lib/postgresql/data
+  
+  forgejo_dind:
+    image: docker:dind
+    container_name: forgejo_dind
+    privileged: true
+    restart: unless-stopped
+    command: ["dockerd", "-H", "tcp://0.0.0.0:2375", "--tls=false"]
+
+  runner:
+    image: code.forgejo.org/forgejo/runner:13
+    links:
+      - forgejo_dind
+    depends_on:
+      forgejo_dind:
+        condition: service_started
+    container_name: forgejo_runner
+    user: 1000:1000
+    environment:
+      DOCKER_HOST: tcp://forgejo_dind:2375
+    volumes:
+      - /mnt/Docker/Data/Forgejo/runner/data:/data
+      - /mnt/Docker/Data/Forgejo/runner/config.yaml:/config.yaml
+    restart: unless-stopped
+    # command: '/bin/sh -c "while : ; do sleep 1 ; done ;"'
+    command: '/bin/sh -c "sleep 5; forgejo-runner daemon --config /config.yaml"'
