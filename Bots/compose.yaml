@@ -2,9 +2,7 @@
 services:
   anewdawn:
     container_name: anewdawn
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: git.lovinator.space/thelovinator/anewdawn@sha256:22dac5fd2d5518d2f9cd5d4b3ff99c1e3009c79f14a5b88a152ca41340668278
     restart: unless-stopped
     cap_drop:
       - ALL
