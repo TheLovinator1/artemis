@@ -11,3 +11,5 @@ services:
     environment:
       - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN?Add Cloudflare API token to .env file}
       - DOMAINS=lovinator.space,*.lovinator.space,feedvault.se,*.feedvault.se,panso.se,*.panso.se,tussilago.dev,*.tussilago.dev
+      - TZ=Europe/Stockholm
+      - EMOJI=false
