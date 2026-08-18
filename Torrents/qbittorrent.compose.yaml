@@ -14,19 +14,17 @@ services:
       - QBT_VERSION=latest
       - QBT_WEBUI_PORT=8080
       - QBT_TORRENTING_PORT=22799
-      - UMASK=022 # 022: allow all users to read/write files
-    expose:
-      # For web interface
-      - "8080"
+      - UMASK=022
     ports:
       # For bittorrent traffic
-      - 22799:22799/tcp
-      - 22799:22799/udp
+      - "22799:22799/tcp"
+      - "22799:22799/udp"
+      - "8080:8080/tcp"
     tmpfs:
       - /tmp
     volumes:
       - /mnt/Docker/Data/qBittorrent:/config
-      - /mnt/fourteen/Data/Torrents:/downloads
+      - /mnt/fourteen/Data/Torrents:/mnt/fourteen/Data/Torrents
 
 
 networks:
