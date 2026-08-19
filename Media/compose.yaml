@@ -6,37 +6,17 @@ networks:
     driver: bridge
     internal: true
 services:
-  # MARK: Adminer - Database web interface for Postgres
-  adminer:
-    container_name: adminer
-    image: adminer:5
-    restart: unless-stopped
-    networks:
-      - media_postgres
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin4
+    restart: always
     ports:
-      - 8088:8080
-    volumes:
-      - ./adminer-custom.php:/var/www/html/index.php:ro
-    depends_on:
-      media_postgres:
-        condition: service_healthy
+      - "8888:80"
     environment:
-      - ADMINER_DEFAULT_SERVER=media_postgres
-      - ADMINER_DRIVER=pgsql
-      - ADMINER_SERVER=media_postgres
-      - ADMINER_USERNAME=postgres
-      - ADMINER_PASSWORD=${POSTGRES_SUPER_PASSWORD?Add Postgres Super User password to .env file}
-      - ADMINER_DATABASE=postgres
-    healthcheck:
-      interval: 30s
-      retries: 3
-      start_period: 10s
-      test:
-        - CMD
-        - php
-        - -r
-        - 'exit(file_get_contents(''http://localhost:8080/'') ? 0 : 1);'
-      timeout: 10s
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+    volumes:
+      - /mnt/Docker/Data/Media/PGAdmin:/var/lib/pgadmin
   media_db_backup:
     container_name: media_db_backup
     image: ghcr.io/nfrastack/container-db-backup:4.9.0-alpine_3.24@sha256:eb36168ab9a37869583dc14c3f154fd31a57563cedfba0aba40278eb1fa7a1a6
@@ -68,7 +48,7 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_DB=postgres
-      - POSTGRES_PASSWORD=${POSTGRES_SUPER_PASSWORD?Add Postgres Super User password to .env file}
+      - POSTGRES_PASSWORD=${POSTGRES_SUPER_PASSWORD}
       - POSTGRES_SONARR_PASSWORD=${POSTGRES_SONARR_PASSWORD}
       - POSTGRES_RADARR_PASSWORD=${POSTGRES_RADARR_PASSWORD}
       - POSTGRES_BACKUP_PASSWORD=${POSTGRES_BACKUP_PASSWORD}
@@ -97,6 +77,12 @@ services:
     user: 1000:1000
     environment:
       - TZ=Europe/Stockholm
+      - PROWLARR__POSTGRES__HOST=media_postgres
+      - PROWLARR__POSTGRES__PORT=5432
+      - PROWLARR__POSTGRES__USER=prowlarr
+      - PROWLARR__POSTGRES__PASSWORD=${POSTGRES_PROWLARR_PASSWORD}
+      - PROWLARR__POSTGRES__MAINDB=prowlarr_main
+      - PROWLARR__POSTGRES__LOGDB=prowlarr_log
     networks:
       - media
     ports:
@@ -121,14 +107,24 @@ services:
     environment:
       - TZ=Europe/Stockholm
       - RADARR__APP__INSTANCENAME=Radarr
-      - RADARR__AUTH__APIKEY=${RADARR_API_KEY?Add Radarr API key to .env file}
+      - RADARR__AUTH__APIKEY=${RADARR_API_KEY}
       - RADARR__POSTGRES__HOST=media_postgres
       - RADARR__POSTGRES__LOGDB=radarr_default_log
       - RADARR__POSTGRES__MAINDB=radarr_default_main
-      - RADARR__POSTGRES__PASSWORD=${POSTGRES_RADARR_PASSWORD?Add Radarr Postgres password to .env file}
+      - RADARR__POSTGRES__PASSWORD=${POSTGRES_RADARR_PASSWORD}
       - RADARR__POSTGRES__PORT=5432
       - RADARR__POSTGRES__USER=radarr
       - RADARR__SERVER__PORT=7878
+    healthcheck:
+      interval: 30s
+      retries: 3
+      start_period: 30s
+      timeout: 10s
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:8989/api/v3/system/status?apikey=${RADARR_API_KEY}
     networks:
       - media
       - media_postgres
@@ -152,11 +148,11 @@ services:
     environment:
       - TZ=Europe/Stockholm
       - RADARR__APP__INSTANCENAME=Radarr Anime
-      - RADARR__AUTH__APIKEY=${RADARR_API_KEY?Add Radarr API key to .env file}
+      - RADARR__AUTH__APIKEY=${RADARR_API_KEY}
       - RADARR__POSTGRES__HOST=media_postgres
       - RADARR__POSTGRES__LOGDB=radarr_anime_log
       - RADARR__POSTGRES__MAINDB=radarr_anime_main
-      - RADARR__POSTGRES__PASSWORD=${POSTGRES_RADARR_PASSWORD?Add Radarr Postgres password to .env file}
+      - RADARR__POSTGRES__PASSWORD=${POSTGRES_RADARR_PASSWORD}
       - RADARR__POSTGRES__PORT=5432
       - RADARR__POSTGRES__USER=radarr
       - RADARR__SERVER__PORT=7879
@@ -202,7 +198,7 @@ services:
     environment:
       - TZ=Europe/Stockholm
       - SONARR__APP__INSTANCENAME=Sonarr
-      - SONARR__AUTH__APIKEY=${SONARR_API_KEY?Add Sonarr API key to .env file}
+      - SONARR__AUTH__APIKEY=${SONARR_API_KEY}
       - SONARR__POSTGRES__HOST=media_postgres
       - SONARR__POSTGRES__LOGDB=sonarr_default_log
       - SONARR__POSTGRES__MAINDB=sonarr_default_main
@@ -214,12 +210,12 @@ services:
       interval: 30s
       retries: 3
       start_period: 30s
+      timeout: 10s
       test:
         - CMD
         - curl
         - -f
         - http://localhost:8989/api/v3/system/status?apikey=${SONARR_API_KEY}
-      timeout: 10s
     networks:
       - media
       - media_postgres
@@ -245,7 +241,7 @@ services:
     environment:
       - TZ=Europe/Stockholm
       - SONARR__APP__INSTANCENAME=Sonarr Anime
-      - SONARR__AUTH__APIKEY=${SONARR_API_KEY?Add Sonarr API key to .env file}
+      - SONARR__AUTH__APIKEY=${SONARR_API_KEY}
       - SONARR__POSTGRES__HOST=media_postgres
       - SONARR__POSTGRES__LOGDB=sonarr_anime_log
       - SONARR__POSTGRES__MAINDB=sonarr_anime_main
