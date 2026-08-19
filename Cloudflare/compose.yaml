@@ -1,15 +1,19 @@
+---
 services:
   cloudflare_ddns:
-    image: favonia/cloudflare-ddns:1
+    cap_drop:
+      - all
     container_name: cloudflare_ddns
-    network_mode: host
-    restart: always
-    user: "1000:1000"
-    read_only: true
-    cap_drop: [all]
-    security_opt: [no-new-privileges:true]
     environment:
       - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN?Add Cloudflare API token to .env file}
       - DOMAINS=lovinator.space,*.lovinator.space,feedvault.se,*.feedvault.se,panso.se,*.panso.se,tussilago.dev,*.tussilago.dev
-      - TZ=Europe/Stockholm
       - EMOJI=false
+      - TZ=Europe/Stockholm
+    image: favonia/cloudflare-ddns:1
+    network_mode: host
+    read_only: true
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    user: 1000:1000
+...

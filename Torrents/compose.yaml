@@ -1,36 +1,24 @@
 ---
 services:
   qbittorrent:
-    image: ghcr.io/qbittorrent/docker-qbittorrent-nox:latest
     container_name: qbittorrent
+    image: ghcr.io/qbittorrent/docker-qbittorrent-nox:latest
+    network_mode: host
     read_only: true
     restart: unless-stopped
     stop_grace_period: 30m
-    user: 1000:1000
     tty: true
+    user: 1000:1000
     environment:
-      - TZ=Europe/Stockholm
       - QBT_LEGAL_NOTICE=confirm
+      - QBT_TORRENTING_PORT=22799
       - QBT_VERSION=latest
       - QBT_WEBUI_PORT=8080
-      - QBT_TORRENTING_PORT=22799
+      - TZ=Europe/Stockholm
       - UMASK=022
-    ports:
-      # For bittorrent traffic
-      - "22799:22799/tcp"
-      - "22799:22799/udp"
-      - "8080:8080/tcp"
     tmpfs:
       - /tmp
     volumes:
       - /mnt/Docker/Data/qBittorrent:/config
       - /mnt/fourteen/Data/Torrents:/mnt/fourteen/Data/Torrents
-
-
-networks:
-  qbittorrent:
-    internal: true
-    name: qbittorrent
-
-  default:
-    driver: bridge
+...

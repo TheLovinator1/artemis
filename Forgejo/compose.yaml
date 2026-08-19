@@ -1,70 +1,71 @@
+---
+networks:
+  forgejo:
+    external: false
 services:
   forgejo:
-    image: codeberg.org/forgejo/forgejo:16
     container_name: forgejo
+    image: codeberg.org/forgejo/forgejo:16
     restart: always
+    depends_on:
+      - forgejo_database
     environment:
       - TZ=Europe/Stockholm
       - USER_UID=1000
       - USER_GID=1000
+    networks:
+      - forgejo
+    ports:
+      - 3205:3000
     volumes:
       - /mnt/Docker/Data/Forgejo/data:/data
-    ports:
-      - "3205:3000"
-    depends_on:
-      - forgejo_database
-    networks:
-      - forgejo
-
-  forgejo_valkey:
-    image: valkey/valkey:latest
-    container_name: forgejo_valkey
-    restart: unless-stopped
-    networks:
-      - forgejo
-
   forgejo_database:
-    image: postgres:17
     container_name: forgejo_database
+    image: postgres:17
     restart: always
     environment:
       - POSTGRES_DB=forgejo
       - POSTGRES_USER=forgejo
       - POSTGRES_PASSWORD=${FORGEJO_DATABASE_PASSWORD}
+    networks:
+      - forgejo
     volumes:
       - /mnt/Docker/Data/Forgejo/database:/var/lib/postgresql/data
-    networks:
-      - forgejo
-      
   forgejo_dind:
-    image: docker:dind
     container_name: forgejo_dind
+    image: docker:dind
     privileged: true
     restart: unless-stopped
-    command: ["dockerd", "-H", "tcp://0.0.0.0:2375", "--tls=false"]
+    command:
+      - dockerd
+      - -H
+      - tcp://0.0.0.0:2375
+      - --tls=false
     networks:
       - forgejo
-      
+  forgejo_valkey:
+    container_name: forgejo_valkey
+    image: valkey/valkey:latest
+    networks:
+      - forgejo
+    restart: unless-stopped
   runner:
+    container_name: forgejo_runner
+    command: /bin/sh -c "sleep 5; forgejo-runner daemon --config /config.yaml"
+    # command: '/bin/sh -c "while : ; do sleep 1 ; done ;"'
     image: code.forgejo.org/forgejo/runner:13
-    links:
-      - forgejo_dind
+    restart: unless-stopped
+    user: 1000:1000
     depends_on:
       forgejo_dind:
         condition: service_started
-    container_name: forgejo_runner
-    user: 1000:1000
     environment:
       DOCKER_HOST: tcp://forgejo_dind:2375
+    links:
+      - forgejo_dind
+    networks:
+      - forgejo
     volumes:
       - /mnt/Docker/Data/Forgejo/runner/data:/data
       - /mnt/Docker/Data/Forgejo/runner/config.yaml:/config.yaml
-    restart: unless-stopped
-    # command: '/bin/sh -c "while : ; do sleep 1 ; done ;"'
-    command: '/bin/sh -c "sleep 5; forgejo-runner daemon --config /config.yaml"'
-    networks:
-      - forgejo
-
-networks:
-  forgejo:
-    external: false
+...

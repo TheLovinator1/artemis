@@ -1,13 +1,16 @@
+---
+networks:
+  arcane_internal:
+    driver: bridge
+    name: arcane_internal
 services:
   arcane:
-    image: ghcr.io/getarcaneapp/manager:latest
     container_name: arcane
+    image: ghcr.io/getarcaneapp/manager:latest
     restart: unless-stopped
-    ports:
-      - 3552:3552
-    volumes:
-      - /mnt/Docker/Data/Arcane/data:/app/data
-      - /mnt/Docker/Data/artemis:/mnt/Docker/Data/artemis
+    depends_on:
+      - docker_socket_proxy
+      - arcane_postgres
     environment:
       - APP_URL=http://apollo:3552
       - PUID=1000
@@ -29,16 +32,30 @@ services:
       - PROJECTS_DIRECTORY=/mnt/Docker/Data/artemis
       - DOCKER_HOST=tcp://docker_socket_proxy:2375
       - DATABASE_URL=postgresql://arcane:${ARCANE_DATABASE_PASSWORD?Add Arcane database password to .env file}@arcane_postgres:5432/arcane
-    depends_on:
-      - docker_socket_proxy
-      - arcane_postgres
     networks:
       - arcane_internal
-
+    ports:
+      - 3552:3552
+    volumes:
+      - /mnt/Docker/Data/Arcane/data:/app/data
+      - /mnt/Docker/Data/artemis:/mnt/Docker/Data/artemis
+  arcane_postgres:
+    container_name: arcane_postgres
+    image: postgres:17-alpine
+    environment:
+      - POSTGRES_DB=arcane
+      - POSTGRES_USER=arcane
+      - POSTGRES_PASSWORD=${ARCANE_DATABASE_PASSWORD?Add Arcane database password to .env file}
+    networks:
+      - arcane_internal
+    restart: unless-stopped
+    volumes:
+      - /mnt/Docker/Data/Arcane/postgres:/var/lib/postgresql/data
   docker_socket_proxy:
-    image: tecnativa/docker-socket-proxy:latest
     container_name: arcane_docker_proxy
+    image: tecnativa/docker-socket-proxy:latest
     privileged: true
+    restart: unless-stopped
     environment:
       - EVENTS=1
       - PING=1
@@ -63,28 +80,10 @@ services:
       - SYSTEM=0
       - TASKS=0
       - VOLUMES=1
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
       - arcane_internal
-    restart: unless-stopped
     security_opt:
       - no-new-privileges:true
-
-  arcane_postgres:
-    image: postgres:17-alpine
-    container_name: arcane_postgres
-    restart: unless-stopped
-    networks:
-      - arcane_internal
-    environment:
-      - POSTGRES_DB=arcane
-      - POSTGRES_USER=arcane
-      - POSTGRES_PASSWORD=${ARCANE_DATABASE_PASSWORD?Add Arcane database password to .env file}
     volumes:
-      - /mnt/Docker/Data/Arcane/postgres:/var/lib/postgresql/data
-
-networks:
-  arcane_internal:
-    driver: bridge
-    name: arcane_internal
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+...

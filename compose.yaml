@@ -1,7 +1,31 @@
-services:
+---
+networks:
   socket_proxy:
-    image: ghcr.io/tecnativa/docker-socket-proxy@sha256:1f5038b54f06c3e18422902cf00ba21803d1c97805aae032e5e6673d532d3459
+    internal: true
+services:
+  dockhand:
+    container_name: dockhand
+    image: fnsys/dockhand:latest
+    restart: unless-stopped
+    depends_on:
+      - socket_proxy
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - HOST_DATA_DIR=/mnt/Docker/Data/Dockhand
+      - DATA_DIR=/mnt/Docker/Data/Dockhand
+      - ENCRYPTION_KEY=${DOCKHAND_ENCRYPTION_KEY?Add encryption key to .env file}
+      - EXPORT_METRICS=true
+    networks:
+      - socket_proxy
+      - default
+    ports:
+      - 3000:3000
+    volumes:
+      - /mnt/Docker/Data/Dockhand:/mnt/Docker/Data/Dockhand
+  socket_proxy:
     container_name: socket_proxy
+    image: ghcr.io/tecnativa/docker-socket-proxy@sha256:1f5038b54f06c3e18422902cf00ba21803d1c97805aae032e5e6673d532d3459
     restart: unless-stopped
     environment:
       # Required for Dockhand core functionality
@@ -13,41 +37,20 @@ services:
       - POST=1
       - DELETE=1
       # Required for dashboard host info and disk usage
+
       - INFO=1
       - SYSTEM=1
       # Required for vulnerability scanning
+
       - ALLOW_START=1
       - ALLOW_STOP=1
       - ALLOW_RESTARTS=1
       # Optional: enable for the container terminal, volume browsing,
+
       # and the in-container file browser (all use the Docker exec API)
       - EXEC=1
+    networks:
+      - socket_proxy
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-    networks:
-      - socket_proxy
-
-  dockhand:
-    image: fnsys/dockhand:latest
-    container_name: dockhand
-    restart: unless-stopped
-    depends_on:
-      - socket_proxy
-    ports:
-      - "3000:3000"
-    volumes:
-      - /mnt/Docker/Data/Dockhand:/mnt/Docker/Data/Dockhand
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - HOST_DATA_DIR=/mnt/Docker/Data/Dockhand
-      - DATA_DIR=/mnt/Docker/Data/Dockhand
-      - ENCRYPTION_KEY=${DOCKHAND_ENCRYPTION_KEY?Add encryption key to .env file}
-      - EXPORT_METRICS=true
-    networks:
-      - socket_proxy
-      - default
-
-networks:
-  socket_proxy:
-    internal: true
+...
