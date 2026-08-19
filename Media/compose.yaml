@@ -2,12 +2,11 @@
 networks:
   media:
     driver: bridge
-    gw_priority: 100
 
   media_postgres:
     driver: bridge
     internal: true
-    gw_priority: 0
+
 services:
   pgadmin:
     image: dpage/pgadmin4
@@ -22,9 +21,11 @@ services:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
     networks:
-      - media_postgres
+      media_postgres:
+        gw_priority: 0
     volumes:
       - /mnt/Docker/Data/Media/PGAdmin:/var/lib/pgadmin
+
   media_db_backup:
     container_name: media_db_backup
     image: ghcr.io/nfrastack/container-db-backup:4.9.0-alpine_3.24@sha256:eb36168ab9a37869583dc14c3f154fd31a57563cedfba0aba40278eb1fa7a1a6
@@ -43,9 +44,11 @@ services:
       - DB01_USER=backup
       - DB01_PASS=${POSTGRES_BACKUP_PASSWORD}
     networks:
-      - media_postgres
+      media_postgres:
+        gw_priority: 0
     volumes:
       - /mnt/Fourteen/Data/Backup/Media/Database:/backup
+
   # MARK: Postgres
   media_postgres:
     command: postgres -c config_file=/etc/postgresql/postgresql.conf
@@ -68,7 +71,8 @@ services:
         - CMD-SHELL
         - pg_isready --username sonarr --dbname sonarr_default_main
     networks:
-      - media_postgres
+      media_postgres:
+        gw_priority: 0
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
@@ -76,6 +80,7 @@ services:
       - /mnt/Docker/Data/Media/Postgres:/var/lib/postgresql
       - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro
       - ./postgresql.conf:/etc/postgresql/postgresql.conf:ro
+
   # MARK: Prowlarr
   prowlarr:
     container_name: prowlarr
@@ -92,15 +97,17 @@ services:
       - PROWLARR__POSTGRES__MAINDB=prowlarr_main
       - PROWLARR__POSTGRES__LOGDB=prowlarr_log
     networks:
-      - media
+      media:
+        gw_priority: 100
     ports:
-      - 9696:9696
+      - "9696:9696"
     security_opt:
       - no-new-privileges:true
     tmpfs:
       - /run:uid=1000,gid=1000,exec
     volumes:
       - /mnt/Docker/Data/Media/Prowlarr:/config
+
   # MARK: Radarr
   radarr:
     container_name: radarr
@@ -132,17 +139,20 @@ services:
         - CMD
         - curl
         - -f
-        - http://localhost:8989/api/v3/system/status?apikey=${RADARR_API_KEY}
+        - http://localhost:7878/api/v3/system/status?apikey=${RADARR_API_KEY}
     networks:
-      - media
-      - media_postgres
+      media:
+        gw_priority: 100
+      media_postgres:
+        gw_priority: 0
     ports:
-      - 7878:7878
+      - "7878:7878"
     tmpfs:
       - /run:uid=1000,gid=1000,exec
     volumes:
       - /mnt/Docker/Data/Media/Radarr/Default:/config
       - /mnt/fourteen/Data/Torrents:/mnt/fourteen/Data/Torrents
+
   radarr_anime:
     container_name: radarr_anime
     image: lscr.io/linuxserver/radarr:develop
@@ -165,15 +175,18 @@ services:
       - RADARR__POSTGRES__USER=radarr
       - RADARR__SERVER__PORT=7879
     networks:
-      - media
-      - media_postgres
+      media:
+        gw_priority: 100
+      media_postgres:
+        gw_priority: 0
     ports:
-      - 7879:7879
+      - "7879:7879"
     tmpfs:
       - /run:uid=1000,gid=1000,exec
     volumes:
       - /mnt/Docker/Data/Media/Radarr/Anime:/config
       - /mnt/fourteen/Data/Torrents:/mnt/fourteen/Data/Torrents
+
   # MARK: Recyclarr
   recyclarr:
     container_name: recyclarr
@@ -186,11 +199,13 @@ services:
       - TZ=Europe/Stockholm
       - RECYCLARR_CREATE_CONFIG=true
     networks:
-      - media
+      media:
+        gw_priority: 100
     security_opt:
       - no-new-privileges:true
     volumes:
       - /mnt/Docker/Data/Media/Recyclarr:/config
+
   # MARK: Sonarr
   sonarr:
     container_name: sonarr
@@ -225,17 +240,20 @@ services:
         - -f
         - http://localhost:8989/api/v3/system/status?apikey=${SONARR_API_KEY}
     networks:
-      - media
-      - media_postgres
+      media:
+        gw_priority: 100
+      media_postgres:
+        gw_priority: 0
     ports:
-      - 8989:8989
+      - "8989:8989"
     security_opt:
-      - no-new-privileges=true
+      - no-new-privileges:true
     tmpfs:
       - /run:uid=1000,gid=1000,exec
     volumes:
       - /mnt/Docker/Data/Media/Sonarr/Default:/config
       - /mnt/fourteen/Data/Torrents:/mnt/fourteen/Data/Torrents
+
   sonarr_anime:
     container_name: sonarr_anime
     image: lscr.io/linuxserver/sonarr:develop
@@ -258,13 +276,14 @@ services:
       - SONARR__POSTGRES__USER=sonarr
       - SONARR__SERVER__PORT=8990
     networks:
-      - media
-      - media_postgres
+      media:
+        gw_priority: 100
+      media_postgres:
+        gw_priority: 0
     ports:
-      - 8990:8990
+      - "8990:8990"
     tmpfs:
       - /run:uid=1000,gid=1000,exec
     volumes:
       - /mnt/Docker/Data/Media/Sonarr/Anime:/config
       - /mnt/fourteen/Data/Torrents:/mnt/fourteen/Data/Torrents
-...
