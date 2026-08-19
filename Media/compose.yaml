@@ -2,9 +2,12 @@
 networks:
   media:
     driver: bridge
+    gw_priority: 100
+
   media_postgres:
     driver: bridge
     internal: true
+    gw_priority: 0
 services:
   pgadmin:
     image: dpage/pgadmin4
