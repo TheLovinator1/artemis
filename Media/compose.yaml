@@ -75,10 +75,10 @@ services:
     healthcheck:
       interval: 10s
       retries: 5
+      timeout: 5s
       test:
         - CMD-SHELL
         - pg_isready --username sonarr --dbname sonarr_default_main
-      timeout: 5s
     networks:
       - media_postgres
     restart: unless-stopped

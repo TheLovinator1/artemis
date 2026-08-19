@@ -1,5 +1,25 @@
 ---
 services:
+  qui_postgres:
+    container_name: qui_postgres
+    image: postgres:18
+    restart: unless-stopped
+    shm_size: 256m
+    stop_grace_period: 1m
+    environment:
+      POSTGRES_DB: qui
+      POSTGRES_PASSWORD: ${POSTGRES_QUI_PASSWORD}
+      POSTGRES_USER: qui
+    healthcheck:
+      interval: 10s
+      retries: 5
+      test:
+        - CMD-SHELL
+        - pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB
+      timeout: 5s
+    volumes:
+      - /mnt/Docker/Data/Torrents/postgres:/var/lib/postgresql
+      # - ./postgresql.conf:/etc/postgresql/postgresql.conf:ro
   qbittorrent:
     container_name: qbittorrent
     image: ghcr.io/qbittorrent/docker-qbittorrent-nox:latest
@@ -21,4 +41,28 @@ services:
     volumes:
       - /mnt/Docker/Data/qBittorrent:/config
       - /mnt/fourteen/Data/Torrents:/mnt/fourteen/Data/Torrents
-...
+  qui:
+    container_name: qui
+    image: ghcr.io/autobrr/qui:pr-2351
+    depends_on:
+      qui_postgres:
+        condition: service_healthy
+    environment:
+      - QUI__DATABASE_HOST=qui_postgres
+      - QUI__DATABASE_PORT=5432
+      - QUI__DATABASE_USER=qui
+      - QUI__DATABASE_PASSWORD=${POSTGRES_QUI_PASSWORD}
+      - QUI__DATABASE_SSL_MODE=disable
+      - QUI__DATABASE_NAME=qui
+      - QUI__DATABASE_ENGINE=postgres
+      - QUI__LOG_LEVEL=INFO
+      - QUI__BACKUP_DIR=/mnt/Fourteen/Data/Backup/Torrents/qui
+    ports:
+      - 7476:7476
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - /mnt/Docker/Data/Torrents/qui:/config
+      - /mnt/fourteen/Data/Torrents:/mnt/fourteen/Data/Torrents
+      - /mnt/Fourteen/Data/Backup/Torrents/qui:/mnt/Fourteen/Data/Backup/Torrents/qui
