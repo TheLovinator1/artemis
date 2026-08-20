@@ -5,6 +5,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     -- Create Users
     CREATE USER sonarr WITH PASSWORD '$POSTGRES_SONARR_PASSWORD';
     CREATE USER radarr WITH PASSWORD '$POSTGRES_RADARR_PASSWORD';
+    CREATE USER prowlarr with PASSWORD '$POSTGRES_RADARR_PASSWORD';
 
     -- Create Backup User (Global Read-Only access)
     CREATE USER backup WITH PASSWORD '$POSTGRES_BACKUP_PASSWORD';
@@ -21,4 +22,8 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     CREATE DATABASE radarr_default_log OWNER radarr;
     CREATE DATABASE radarr_anime_main OWNER radarr;
     CREATE DATABASE radarr_anime_log OWNER radarr;
+
+    -- Create Prowlarr Databases
+    CREATE DATABASE prowlarr_main OWNER prowlarr;
+    CREATE DATABASE prowlarr_log OWNER prowlarr;
 EOSQL

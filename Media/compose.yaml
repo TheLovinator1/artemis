@@ -66,6 +66,7 @@ services:
       - POSTGRES_SONARR_PASSWORD=${POSTGRES_SONARR_PASSWORD}
       - POSTGRES_RADARR_PASSWORD=${POSTGRES_RADARR_PASSWORD}
       - POSTGRES_BACKUP_PASSWORD=${POSTGRES_BACKUP_PASSWORD}
+      - POSTGRES_PROWLARR_PASSWORD=${POSTGRES_PROWLARR_PASSWORD}
     healthcheck:
       interval: 10s
       retries: 5
@@ -102,6 +103,8 @@ services:
     networks:
       media:
         gw_priority: 100
+      media_postgres:
+        gw_priority: 0
     ports:
       - "9696:9696"
     security_opt:
