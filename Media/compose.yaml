@@ -17,10 +17,13 @@ services:
         condition: service_healthy
     ports:
       - "8888:80"
+      - "8889:443"
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
     networks:
+      media:
+        gw_priority: 100
       media_postgres:
         gw_priority: 0
     volumes:
