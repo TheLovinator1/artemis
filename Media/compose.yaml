@@ -90,7 +90,7 @@ services:
   # MARK: Prowlarr
   prowlarr:
     container_name: prowlarr
-    image: lscr.io/linuxserver/prowlarr:develop
+    image: lscr.io/linuxserver/prowlarr:nightly
     read_only: true
     restart: unless-stopped
     user: 1000:1000
