@@ -77,6 +77,8 @@ services:
     networks:
       media_postgres:
         gw_priority: 0
+        aliases:
+          - media-postgres
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
