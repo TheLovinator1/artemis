@@ -102,6 +102,8 @@ services:
       - PROWLARR__POSTGRES__PASSWORD=${POSTGRES_PROWLARR_PASSWORD}
       - PROWLARR__POSTGRES__MAINDB=prowlarr_main
       - PROWLARR__POSTGRES__LOGDB=prowlarr_log
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       media:
         gw_priority: 100
@@ -138,6 +140,8 @@ services:
       - RADARR__POSTGRES__PORT=5432
       - RADARR__POSTGRES__USER=radarr
       - RADARR__SERVER__PORT=7878
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     healthcheck:
       interval: 30s
       retries: 3
@@ -182,6 +186,8 @@ services:
       - RADARR__POSTGRES__PORT=5432
       - RADARR__POSTGRES__USER=radarr
       - RADARR__SERVER__PORT=7879
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     healthcheck:
       interval: 30s
       retries: 3
@@ -247,6 +253,8 @@ services:
       - SONARR__POSTGRES__PORT=5432
       - SONARR__POSTGRES__USER=sonarr
       - SONARR__SERVER__PORT=8989
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     healthcheck:
       interval: 30s
       retries: 3
@@ -293,6 +301,8 @@ services:
       - SONARR__POSTGRES__PORT=5432
       - SONARR__POSTGRES__USER=sonarr
       - SONARR__SERVER__PORT=8990
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     healthcheck:
       interval: 30s
       retries: 3
