@@ -104,6 +104,16 @@ services:
       - PROWLARR__POSTGRES__LOGDB=prowlarr_log
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    healthcheck:
+      interval: 30s
+      retries: 3
+      start_period: 30s
+      timeout: 10s
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:9696/api/v1/system/status?apikey=${PROWLARR_API_KEY}
     networks:
       media:
         gw_priority: 100
