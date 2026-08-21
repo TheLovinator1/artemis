@@ -1,8 +1,28 @@
+---
 services:
   uptime-kuma:
     image: louislam/uptime-kuma:2
     restart: unless-stopped
     volumes:
       - /mnt/Docker/Data/Monitoring/UptimeKuma:/app/data
+      - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - "3001:3001"
+  dozzle:
+    image: ghcr.io/amir20/dozzle:latest
+    container_name: dozzle
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /mnt/Docker/Data/Monitoring/Dozzle:/data
+    ports:
+      - 9999:8080
+    environment:
+      - DOZZLE_HOSTNAME=apollo
+      - DOZZLE_NO_ANALYTICS=True
+    healthcheck:
+      test: [ "CMD", "/dozzle", "healthcheck" ]
+      interval: 3s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
+...
